@@ -1,0 +1,584 @@
+{
+  "name": "API Bridge - Data Router",
+  "nodes": [
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "9334d49a-fe9f-4afe-9e24-efaebaaaf4ae",
+              "leftValue": "={{ $json.body.event_id }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        -288,
+        -144
+      ],
+      "id": "0a6ec073-ff19-43db-bf1b-197d03009ae1",
+      "name": "Validation"
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "apibridge-ingest",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        -512,
+        -144
+      ],
+      "id": "c24e9a96-6859-4260-bf7d-022e3c0cf900",
+      "name": "apibridge-ingest",
+      "webhookId": "5097661c-517e-4688-b603-bfc68d6f09e9"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://httpbin.org/post",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ $json }}",
+        "options": {
+          "response": {
+            "response": {
+              "fullResponse": true
+            }
+          }
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.5,
+      "position": [
+        608,
+        -48
+      ],
+      "id": "9217aa54-c80b-4abe-904d-953e63b6f854",
+      "name": "Send To Destination API",
+      "retryOnFail": true,
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "schema": {
+          "__rl": true,
+          "mode": "list",
+          "value": "public"
+        },
+        "table": {
+          "__rl": true,
+          "value": "api_delivery_logs",
+          "mode": "list",
+          "cachedResultName": "api_delivery_logs"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "event_id": "={{ $('Normalize Event').item.json.event_id }}",
+            "destination": "https://httpbin.org/post",
+            "status": "success",
+            "response_code": "={{ $json.statusCode }}",
+            "response_body": "={{ JSON.stringify($json) }}"
+          },
+          "matchingColumns": [
+            "id"
+          ],
+          "schema": [
+            {
+              "id": "id",
+              "displayName": "id",
+              "required": false,
+              "defaultMatch": true,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "event_id",
+              "displayName": "event_id",
+              "required": true,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "destination",
+              "displayName": "destination",
+              "required": true,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "status",
+              "displayName": "status",
+              "required": true,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "response_code",
+              "displayName": "response_code",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "response_body",
+              "displayName": "response_body",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "object",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "created_at",
+              "displayName": "created_at",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "dateTime",
+              "canBeUsedToMatch": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.7,
+      "position": [
+        832,
+        -144
+      ],
+      "id": "a5f5d5e2-4125-4e07-a94b-3c8805b84fdd",
+      "name": "Log Delivery",
+      "credentials": {
+        "postgres": {
+          "id": "MUbmSgn4G5JWh2z9",
+          "name": "apibridge"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "d7e4aefc-9ea0-4f53-bbf7-805a50f11cc3",
+              "name": "event_id",
+              "value": "={{ $json.body.event_id }}",
+              "type": "string"
+            },
+            {
+              "id": "8c7aa247-5455-44fd-a5fa-8723d0bff6c4",
+              "name": "source",
+              "value": "={{ $json.body.source }}",
+              "type": "string"
+            },
+            {
+              "id": "303d17ae-348a-4eb1-a956-cd51968ccc48",
+              "name": "event_type",
+              "value": "={{ $json.body.event_type }}",
+              "type": "string"
+            },
+            {
+              "id": "117df3c5-b4d8-460c-a2b8-0b687d1b68b3",
+              "name": "order_id",
+              "value": "={{ $json.body.order_id }}",
+              "type": "string"
+            },
+            {
+              "id": "a85375f3-36da-4485-a322-acc7c95aa104",
+              "name": "amount",
+              "value": "={{ $json.body.amount }}",
+              "type": "number"
+            },
+            {
+              "id": "0b56dcec-79c7-4f8b-9bee-8b62577807c8",
+              "name": "currency",
+              "value": "={{ $json.body.currency }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.5,
+      "position": [
+        -64,
+        -144
+      ],
+      "id": "4c87759d-b26f-48ec-a681-8d6468332714",
+      "name": "Normalize Event"
+    },
+    {
+      "parameters": {
+        "schema": {
+          "__rl": true,
+          "mode": "list",
+          "value": "public"
+        },
+        "table": {
+          "__rl": true,
+          "value": "api_delivery_logs",
+          "mode": "list",
+          "cachedResultName": "api_delivery_logs"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "destination": "https://httpbin.org/post",
+            "event_id": "={{ $('Normalize Event').item.json.event_id }}",
+            "status": "failed",
+            "response_body": "={{ JSON.stringify($json) }}",
+            "response_code": 0
+          },
+          "matchingColumns": [
+            "id"
+          ],
+          "schema": [
+            {
+              "id": "id",
+              "displayName": "id",
+              "required": false,
+              "defaultMatch": true,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "event_id",
+              "displayName": "event_id",
+              "required": true,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "destination",
+              "displayName": "destination",
+              "required": true,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "status",
+              "displayName": "status",
+              "required": true,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "response_code",
+              "displayName": "response_code",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "response_body",
+              "displayName": "response_body",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "object",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "created_at",
+              "displayName": "created_at",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "dateTime",
+              "canBeUsedToMatch": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.7,
+      "position": [
+        832,
+        48
+      ],
+      "id": "ffbdf04b-7c0b-4762-b09c-c281d91ed54a",
+      "name": "Log Failed Delivery",
+      "credentials": {
+        "postgres": {
+          "id": "MUbmSgn4G5JWh2z9",
+          "name": "apibridge"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "53078544-1a90-4af9-b352-1ec9f1be5a64",
+              "leftValue": "={{ $json.already_processed }}",
+              "rightValue": false,
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        384,
+        -144
+      ],
+      "id": "0604a3c7-abec-4ec3-87fd-0daf4dc446f5",
+      "name": "If"
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "{\n  \"success\": true,\n  \"duplicate\": true,\n  \"message\": \"This event has already been processed.\"\n}",
+        "options": {
+          "responseCode": 200
+        }
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.5,
+      "position": [
+        608,
+        -240
+      ],
+      "id": "2e606222-7ca8-4306-8e71-8d1346191a03",
+      "name": "Return Duplicate Resonse"
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "{\n  \"success\": true,\n  \"duplicate\": false,\n  \"message\": \"Event delivered successfully.\"\n}",
+        "options": {
+          "responseCode": 200
+        }
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.5,
+      "position": [
+        1056,
+        -144
+      ],
+      "id": "0c21894c-a797-4b38-b088-a989afe7ba86",
+      "name": "Return Success Response"
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "{\n  \"success\": false,\n  \"duplicate\": false,\n  \"message\": \"Delivery failed. Check the delivery log.\"\n}",
+        "options": {
+          "responseCode": 502
+        }
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.5,
+      "position": [
+        1056,
+        48
+      ],
+      "id": "e2a5d05a-0df5-482e-aeb7-e1cdad5fc0ee",
+      "name": "Return Failure Response"
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT EXISTS (\n    SELECT 1\n    FROM api_delivery_logs\n    WHERE event_id = $1\n      AND status = 'success'\n) AS already_processed;",
+        "options": {
+          "queryReplacement": "={{ $json.event_id }}"
+        }
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.7,
+      "position": [
+        160,
+        -144
+      ],
+      "id": "f65deccc-02b3-45d8-a540-1f41ec443ac0",
+      "name": "Check Existing Event",
+      "credentials": {
+        "postgres": {
+          "id": "MUbmSgn4G5JWh2z9",
+          "name": "apibridge"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Validation": {
+      "main": [
+        [
+          {
+            "node": "Normalize Event",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "apibridge-ingest": {
+      "main": [
+        [
+          {
+            "node": "Validation",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send To Destination API": {
+      "main": [
+        [
+          {
+            "node": "Log Delivery",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Log Failed Delivery",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Normalize Event": {
+      "main": [
+        [
+          {
+            "node": "Check Existing Event",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If": {
+      "main": [
+        [
+          {
+            "node": "Return Duplicate Resonse",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Send To Destination API",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Log Delivery": {
+      "main": [
+        [
+          {
+            "node": "Return Success Response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Log Failed Delivery": {
+      "main": [
+        [
+          {
+            "node": "Return Failure Response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Check Existing Event": {
+      "main": [
+        [
+          {
+            "node": "If",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "availableInMCP": false
+  },
+  "versionId": "322f40bc-9c9e-40dc-b3ac-1009d15df19f",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "265623373d4440176b9b82cf96fcb8930a96864e202d72abd4bc2b6ab3513b7c"
+  },
+  "nodeGroups": [],
+  "id": "fvYNlMGueN5qUWV7",
+  "tags": []
+}
